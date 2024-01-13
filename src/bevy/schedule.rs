@@ -16,19 +16,19 @@ struct D(f32);
 struct E(f32);
 
 fn ab(mut query: Query<(&mut A, &mut B)>) {
-    query.par_iter_mut().for_each_mut(|(mut a, mut b)| {
+    query.par_iter_mut().for_each(|(mut a, mut b)| {
         std::mem::swap(&mut a.0, &mut b.0);
     });
 }
 
 fn cd(mut query: Query<(&mut C, &mut D)>) {
-    query.par_iter_mut().for_each_mut(|(mut c, mut d)| {
+    query.par_iter_mut().for_each(|(mut c, mut d)| {
         std::mem::swap(&mut c.0, &mut d.0);
     });
 }
 
 fn ce(mut query: Query<(&mut C, &mut E)>) {
-    query.par_iter_mut().for_each_mut(|(mut c, mut e)| {
+    query.par_iter_mut().for_each(|(mut c, mut e)| {
         std::mem::swap(&mut c.0, &mut e.0);
     });
 }
