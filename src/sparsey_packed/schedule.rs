@@ -25,43 +25,40 @@ fn ce(mut c: CompMut<C>, mut e: CompMut<E>) {
     });
 }
 
-pub struct Benchmark(World, Resources, Schedule, ThreadPool);
+pub struct Benchmark(EntityStorage, ThreadPool);
 
 impl Benchmark {
     pub fn new() -> Self {
-        let layout = Layout::builder()
-            .add_group(<(A, B)>::group())
-            .add_group(<(C, D)>::group())
+        let layout = GroupLayout::builder()
+            .add_group::<(A, B)>()
+            .add_group::<(C, D)>()
             .build();
 
-        let mut world = World::with_layout(&layout);
-        world.register::<A>();
-        world.register::<B>();
-        world.register::<C>();
-        world.register::<D>();
-        world.register::<E>();
+        let mut entities = EntityStorage::new(&layout);
+        entities.register::<E>();
 
-        world.bulk_create((0..10_000).map(|_| (A(0.0),)));
-        world.bulk_create((0..10_000).map(|_| (A(0.0), B(0.0))));
-        world.bulk_create((0..10_000).map(|_| (A(0.0), B(0.0), C(0.0))));
-        world.bulk_create((0..10_000).map(|_| (A(0.0), B(0.0), C(0.0), D(0.0))));
-        world.bulk_create((0..10_000).map(|_| (A(0.0), B(0.0), C(0.0), E(0.0))));
+        entities.extend((0..10_000).map(|_| (A(0.0),)));
+        entities.extend((0..10_000).map(|_| (A(0.0), B(0.0))));
+        entities.extend((0..10_000).map(|_| (A(0.0), B(0.0), C(0.0))));
+        entities.extend((0..10_000).map(|_| (A(0.0), B(0.0), C(0.0), D(0.0))));
+        entities.extend((0..10_000).map(|_| (A(0.0), B(0.0), C(0.0), E(0.0))));
 
-        let schedule = Schedule::builder()
-            .add_system(ab)
-            .add_system(cd)
-            .add_system(ce)
-            .build();
+        let thread_pool = ThreadPoolBuilder::new().num_threads(2).build().unwrap();
 
-        let thread_pool = ThreadPoolBuilder::new()
-            .num_threads(schedule.max_parallelism())
-            .build()
-            .unwrap();
-
-        Self(world, Resources::default(), schedule, thread_pool)
+        Self(entities, thread_pool)
     }
 
     pub fn run(&mut self) {
-        self.2.run_in_thread_pool(&mut self.0, &mut self.1, &self.3);
+        self.1.scope(|scope| {
+            scope.spawn(|_| {
+                self.0.run(ab);
+            });
+
+            scope.spawn(|_| {
+                self.0.run(cd);
+            });
+        });
+
+        self.0.run(ce);
     }
 }
