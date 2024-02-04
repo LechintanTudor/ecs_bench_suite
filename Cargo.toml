@@ -17,8 +17,8 @@ planck_ecs = { version = "1.2", features = ["parallel"] }
 rayon = "1.8"
 ron = "0.8"
 serde = { version = "1.0", features = ["derive"] }
-shipyard = "0.6.2"
-sparsey = "0.12.0"
+shipyard = "0.6"
+sparsey = "0.12"
 specs = { version = "0.20", features = ["serde"] }
 specs-derive = "0.4"
 
