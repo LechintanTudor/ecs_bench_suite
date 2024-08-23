@@ -25,10 +25,11 @@ impl Benchmark {
     }
 
     pub fn run(&mut self) {
-        let mut query = self.0.query::<&mut Data>();
-
-        query.for_each_mut(&mut self.0, |mut data| {
-            data.0 += 2.0;
-        });
+        self.0
+            .query::<&mut Data>()
+            .iter_mut(&mut self.0)
+            .for_each(|mut data| {
+                data.0 += 2.0;
+            });
     }
 }
