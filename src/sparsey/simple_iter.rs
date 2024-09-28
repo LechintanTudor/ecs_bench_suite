@@ -1,5 +1,5 @@
 use cgmath::*;
-use sparsey::prelude::*;
+use sparsey::World;
 
 #[derive(Clone, Copy)]
 struct Transform(Matrix4<f32>);
@@ -13,17 +13,18 @@ struct Rotation(Vector3<f32>);
 #[derive(Clone, Copy)]
 struct Velocity(Vector3<f32>);
 
-pub struct Benchmark(EntityStorage);
+pub struct Benchmark(World);
 
 impl Benchmark {
     pub fn new() -> Self {
-        let mut entities = EntityStorage::default();
-        entities.register::<Transform>();
-        entities.register::<Position>();
-        entities.register::<Rotation>();
-        entities.register::<Velocity>();
+        let mut world = World::builder()
+            .register::<Transform>()
+            .register::<Position>()
+            .register::<Rotation>()
+            .register::<Velocity>()
+            .build();
 
-        entities.extend((0..10_000).map(|_| {
+        world.extend((0..10_000).map(|_| {
             (
                 Transform(Matrix4::<f32>::from_angle_x(Rad(1.2))),
                 Position(Vector3::unit_x()),
@@ -32,16 +33,13 @@ impl Benchmark {
             )
         }));
 
-        Self(entities)
+        Self(world)
     }
 
     pub fn run(&mut self) {
-        self.0.run(
-            |mut positions: CompMut<Position>, velocities: Comp<Velocity>| {
-                (&mut positions, &velocities).for_each(|(position, velocity)| {
-                    position.0 += velocity.0;
-                });
-            },
-        );
+        self.0
+            .for_each::<(&mut Position, &Velocity)>(|(position, velocity)| {
+                position.0 += velocity.0;
+            });
     }
 }

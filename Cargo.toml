@@ -18,7 +18,7 @@ rayon = "1.10"
 ron = "0.8"
 serde = { version = "1.0", features = ["derive"] }
 shipyard = "0.7"
-sparsey = "0.12"
+sparsey = { version = "0.13", features = ["parallel"] }
 specs = { version = "0.20", features = ["serde"] }
 specs-derive = "0.4"
 

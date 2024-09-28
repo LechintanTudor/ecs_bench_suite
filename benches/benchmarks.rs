@@ -16,7 +16,7 @@ macro_rules! benchmark {
 
 benchmark!(add_remove; bevy, hecs, legion, planck_ecs, shipyard, sparsey, specs);
 benchmark!(frag_iter; bevy, hecs, legion, planck_ecs, shipyard, sparsey, specs);
-benchmark!(heavy_compute; bevy, legion, legion_packed, shipyard, specs);
+benchmark!(heavy_compute; bevy, legion, legion_packed, shipyard, sparsey, sparsey_packed, specs);
 benchmark!(schedule; bevy, legion, legion_packed, planck_ecs, shipyard, sparsey, sparsey_packed, specs);
 benchmark!(serialize_binary; hecs);
 benchmark!(serialize_text; hecs);

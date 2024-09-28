@@ -1,4 +1,4 @@
-use sparsey::prelude::*;
+use sparsey::World;
 
 macro_rules! create_entities {
     ($world:ident; $($variant:ident),*) => {
@@ -12,21 +12,17 @@ macro_rules! create_entities {
 
 struct Data(f32);
 
-pub struct Benchmark(EntityStorage);
+pub struct Benchmark(World);
 
 impl Benchmark {
     pub fn new() -> Self {
-        let mut entities = EntityStorage::default();
-        entities.register::<Data>();
-        create_entities!(entities; A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z);
-
-        Self(entities)
+        let mut world = World::builder().register::<Data>().build();
+        create_entities!(world; A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z);
+        Self(world)
     }
 
     pub fn run(&mut self) {
-        let mut data = self.0.borrow_mut::<Data>();
-
-        (&mut data).for_each(|data| {
+        self.0.for_each::<&mut Data>(|data| {
             data.0 *= 2.0;
         });
     }

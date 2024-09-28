@@ -2,7 +2,7 @@ use cgmath::*;
 use sparsey::World;
 
 #[derive(Clone, Copy)]
-struct Transform(Matrix4<f32>);
+struct Matrix(Matrix4<f32>);
 
 #[derive(Clone, Copy)]
 struct Position(Vector3<f32>);
@@ -18,14 +18,14 @@ pub struct Benchmark(World);
 impl Benchmark {
     pub fn new() -> Self {
         let mut world = World::builder()
-            .add_group::<(Position, Velocity)>()
-            .register::<Transform>()
+            .add_group::<(Matrix, Position)>()
             .register::<Rotation>()
+            .register::<Velocity>()
             .build();
 
-        world.extend((0..10_000).map(|_| {
+        world.extend((0..1000).map(|_| {
             (
-                Transform(Matrix4::<f32>::from_angle_x(Rad(1.2))),
+                Matrix(Matrix4::<f32>::from_angle_x(Rad(1.2))),
                 Position(Vector3::unit_x()),
                 Rotation(Vector3::unit_x()),
                 Velocity(Vector3::unit_x()),
@@ -37,8 +37,12 @@ impl Benchmark {
 
     pub fn run(&mut self) {
         self.0
-            .for_each::<(&mut Position, &Velocity)>(|(position, velocity)| {
-                position.0 += velocity.0;
+            .par_for_each::<(&mut Position, &mut Matrix)>(|(pos, mat)| {
+                for _ in 0..100 {
+                    mat.0 = mat.0.invert().unwrap();
+                }
+
+                pos.0 = mat.0.transform_vector(pos.0);
             });
     }
 }

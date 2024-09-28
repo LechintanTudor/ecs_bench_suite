@@ -1,5 +1,5 @@
 use rayon::{ThreadPool, ThreadPoolBuilder};
-use sparsey::prelude::*;
+use sparsey::World;
 
 struct A(f32);
 struct B(f32);
@@ -7,57 +7,50 @@ struct C(f32);
 struct D(f32);
 struct E(f32);
 
-fn ab(mut a: CompMut<A>, mut b: CompMut<B>) {
-    (&mut a, &mut b).for_each(|(a, b)| {
-        std::mem::swap(&mut a.0, &mut b.0);
-    });
+pub struct Benchmark {
+    world: World,
+    thread_pool: ThreadPool,
 }
-
-fn cd(mut c: CompMut<C>, mut d: CompMut<D>) {
-    (&mut c, &mut d).for_each(|(c, d)| {
-        std::mem::swap(&mut c.0, &mut d.0);
-    });
-}
-
-fn ce(mut c: CompMut<C>, mut e: CompMut<E>) {
-    (&mut c, &mut e).for_each(|(c, e)| {
-        std::mem::swap(&mut c.0, &mut e.0);
-    });
-}
-
-pub struct Benchmark(EntityStorage, ThreadPool);
 
 impl Benchmark {
     pub fn new() -> Self {
-        let mut entities = EntityStorage::default();
-        entities.register::<A>();
-        entities.register::<B>();
-        entities.register::<C>();
-        entities.register::<D>();
-        entities.register::<E>();
+        let mut world = World::builder()
+            .register::<A>()
+            .register::<B>()
+            .register::<C>()
+            .register::<D>()
+            .register::<E>()
+            .build();
 
-        entities.extend((0..10_000).map(|_| (A(0.0),)));
-        entities.extend((0..10_000).map(|_| (A(0.0), B(0.0))));
-        entities.extend((0..10_000).map(|_| (A(0.0), B(0.0), C(0.0))));
-        entities.extend((0..10_000).map(|_| (A(0.0), B(0.0), C(0.0), D(0.0))));
-        entities.extend((0..10_000).map(|_| (A(0.0), B(0.0), C(0.0), E(0.0))));
+        world.extend((0..10_000).map(|_| (A(0.0),)));
+        world.extend((0..10_000).map(|_| (A(0.0), B(0.0))));
+        world.extend((0..10_000).map(|_| (A(0.0), B(0.0), C(0.0))));
+        world.extend((0..10_000).map(|_| (A(0.0), B(0.0), C(0.0), D(0.0))));
+        world.extend((0..10_000).map(|_| (A(0.0), B(0.0), C(0.0), E(0.0))));
 
-        let thread_pool = ThreadPoolBuilder::new().num_threads(2).build().unwrap();
-
-        Self(entities, thread_pool)
+        Benchmark {
+            world,
+            thread_pool: ThreadPoolBuilder::new().num_threads(2).build().unwrap(),
+        }
     }
 
     pub fn run(&mut self) {
-        self.1.scope(|scope| {
+        self.thread_pool.scope(|scope| {
             scope.spawn(|_| {
-                self.0.run(ab);
+                self.world.for_each::<(&mut A, &mut B)>(|(a, b)| {
+                    std::mem::swap(&mut a.0, &mut b.0);
+                });
             });
 
             scope.spawn(|_| {
-                self.0.run(cd);
+                self.world.for_each::<(&mut C, &mut D)>(|(c, d)| {
+                    std::mem::swap(&mut c.0, &mut d.0);
+                });
             });
+        });
 
-            self.0.run(ce);
+        self.world.for_each::<(&mut C, &mut E)>(|(c, e)| {
+            std::mem::swap(&mut c.0, &mut e.0);
         });
     }
 }

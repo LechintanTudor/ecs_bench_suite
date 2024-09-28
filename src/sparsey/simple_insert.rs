@@ -1,5 +1,5 @@
 use cgmath::*;
-use sparsey::prelude::*;
+use sparsey::World;
 
 #[derive(Clone, Copy)]
 struct Transform(Matrix4<f32>);
@@ -13,17 +13,19 @@ struct Rotation(Vector3<f32>);
 #[derive(Clone, Copy)]
 struct Velocity(Vector3<f32>);
 
-pub struct Benchmark(EntityStorage);
+pub struct Benchmark(World);
 
 impl Benchmark {
     pub fn new() -> Self {
-        let mut entities = EntityStorage::default();
-        entities.register::<Transform>();
-        entities.register::<Position>();
-        entities.register::<Rotation>();
-        entities.register::<Velocity>();
+        let world = World::builder()
+            .register::<Transform>()
+            .register::<Position>()
+            .register::<Rotation>()
+            .register::<Velocity>()
+            .register::<Velocity>()
+            .build();
 
-        Self(entities)
+        Self(world)
     }
 
     pub fn run(&mut self) {
